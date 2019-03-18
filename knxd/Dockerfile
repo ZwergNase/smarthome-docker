@@ -1,0 +1,39 @@
+FROM	oliverf/builder AS builder
+
+LABEL	maintainer="Oliver Friesen<oliver.friesen@gmail.com>"
+
+ENV	DEBIAN_FRONTEND noninteractive
+
+WORKDIR	/tmp
+
+RUN	git clone https://github.com/knxd/knxd.git && \
+	cd knxd && \
+	git checkout stable  && \
+	mv debian/knxd.install.systemd debian/knxd.install.systemd_ && \
+	sed '/*/d' debian/knxd.install.systemd_ > debian/knxd.install.systemd && \
+	dpkg-buildpackage -b -uc
+
+FROM	debian:stable-slim
+
+RUN	apt-get update && \
+	apt-get  --quiet --yes --no-install-recommends install \
+		libev4 \
+		libusb-1.0-0 \
+		net-tools && \
+	apt-get -q -y clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
+
+RUN	adduser --system --disabled-password knxd && \
+	usermod -a -G dialout knxd 
+
+COPY	--from=builder /tmp/knxd_*.deb /tmp/
+COPY	--from=builder /tmp/knxd-tools_*.deb /tmp/
+
+RUN	dpkg -i /tmp/knxd*.deb
+
+USER	knxd
+WORKDIR	/home/knxd
+COPY	*.ini ./
+
+ENTRYPOINT ["knxd"]
+CMD ["knxd_ft12.ini"]
