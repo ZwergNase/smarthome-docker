@@ -25,7 +25,8 @@ RUN     apt-get update && \
 			wget \
 			cdbs \
 			ca-certificates \
-			nano
+			nano \
+			subversion			
 
 RUN     adduser --system --disabled-password someuser
 
