@@ -19,8 +19,8 @@ Makefile ist für den build ohne systemd gepatched.
 
 ## fhem
 Änderungen zur Standard-Installation:
-*fhem.cfg unter ~~
-*log nach STDIO (Docker-like)
-*Log im FHEMWEB ausgebeldet
-*/op/fhem/log und /opt/fhem/www/gplot ebenfalls nach ~ verschoben
-*fhem.cfg nofork ergänzt mit Docker unnötig
+* fhem.cfg unter ~~
+* log nach STDIO (Docker-like)
+* Log im FHEMWEB ausgebeldet
+* /op/fhem/log und /opt/fhem/www/gplot ebenfalls nach ~ verschoben
+* fhem.cfg nofork ergänzt mit Docker unnötig
