@@ -31,20 +31,17 @@ RUN		addgroup fhem && \
 WORKDIR /opt/fhem/
 
 COPY	--from=builder --chown=fhem:fhem /tmp/fhem .
-
-COPY	--from=builder --chown=fhem:fhem /tmp/fhem/fhem.cfg /home/fhem/fhem.cfg
-
 RUN     chown -R fhem:fhem ../fhem
+
+COPY	--chown=fhem:fhem fhem.cfg /home/fhem/fhem.cfg
 
 USER	fhem
 
 RUN     mv log ~/log && \
     	mv www/gplot ~/gplot && \
         ln -s ~/log log && \
-	    ln -s ~/gplot www/gplot && \
-        rm fhem.cfg && \
-        ln -s ~/fhem.cfg fhem.cfg
+	    ln -s ~/gplot www/gplot		
 
 EXPOSE  8083 8084 8085 7072
 
-CMD     ["perl", "fhem.pl", "fhem.cfg"]
+CMD     ["perl", "fhem.pl", "/home/fhem/fhem.cfg"]
