@@ -1,1 +1,10 @@
 .DS_Store
+builder/Dockerfile.arm32v7
+builder/Dockerfile.amd64
+builder/Dockerfile.i386
+knxd/Dockerfile.arm32v7
+knxd/Dockerfile.amd64
+knxd/Dockerfile.i386
+fhem/Dockerfile.arm32v7
+fhem/Dockerfile.amd64
+fhem/Dockerfile.i386
