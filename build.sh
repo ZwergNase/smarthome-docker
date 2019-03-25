@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd $1
-for docker_arch in amd64 i386 arm32v7
+for docker_arch in arm32v7 amd64 
 do
 	cp Dockerfile Dockerfile.${docker_arch}
 	sed -i '' -E "s|FROM(.+)debian:|FROM\1${docker_arch}/debian:|g" Dockerfile.${docker_arch}
