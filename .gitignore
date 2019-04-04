@@ -8,3 +8,4 @@ knxd/Dockerfile.i386
 fhem/Dockerfile.arm32v7
 fhem/Dockerfile.amd64
 fhem/Dockerfile.i386
+.vstags
