@@ -46,13 +46,13 @@ RUN		addgroup fhem && \
 
 WORKDIR /opt/fhem/
 
-# WIFI-Light
+COPY	--from=builder --chown=fhem:fhem /tmp/fhem .
+
 COPY    32_WifiLight.pm FHEM/
 
-COPY	--from=builder --chown=fhem:fhem /tmp/fhem .
-RUN     chown -R fhem:fhem ../fhem
-
 COPY	--chown=fhem:fhem fhem.cfg /home/fhem/fhem.cfg
+
+RUN     chown -R fhem:fhem ../fhem
 
 USER	fhem
 
