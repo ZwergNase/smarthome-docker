@@ -14,6 +14,6 @@ RUN	adduser --system --disabled-password samba
 
 WORKDIR	/home/samba
 
-COPY	* .
+COPY	smb.conf start.sh ./
 
-CMD [ "start.sh"]
+CMD [ "/bin/bash", "start.sh"]
