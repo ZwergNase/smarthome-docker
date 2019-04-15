@@ -21,7 +21,7 @@ eval set -- "$OPTS"
 # Defaults
 PUSH=false
 ARCHITECTURES=arm32v7,amd64
-MANIFEST=true
+MANIFEST=false
 BACKGROUND=false
 KEEP=false
 
@@ -121,9 +121,8 @@ if [ "$MANIFEST" == "true" ]; then
 	rm -R ~/.docker/manifests/docker.io_${REPOSITORY}$PROJECT-latest
   # and change back
   REPOSITORY=${REPOSITORY/_/\/}
-	docker manifest create $REPOSITORY$PROJECT:latest $arch_images
+  docker manifest create "$REPOSITORY$PROJECT:latest" $arch_images
 	if [ "$PUSH" == "true" ]; then
-  echo nix
 		docker manifest push $REPOSITORY$PROJECT:latest
 	fi
 fi
