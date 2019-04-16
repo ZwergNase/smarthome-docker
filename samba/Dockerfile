@@ -16,4 +16,6 @@ WORKDIR	/home/samba
 
 COPY	smb.conf start.sh ./
 
+RUN		chmod og-wrx *
+
 CMD [ "/bin/bash", "start.sh"]
