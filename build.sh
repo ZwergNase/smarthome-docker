@@ -12,7 +12,7 @@ fi
 
 # read the options
 OPTS=$(getopt -o pa:mbk --long push,architectures:,manifest,background,keep --name "$0" -- "$@")
-if [ $? != 0 ] ; then 
+if [ $? != 0 ] ; then
 	echo "Failed to parse options...exiting." >&2
 	exit 1
 fi
@@ -46,7 +46,7 @@ while true ; do
     -k | --keep )
       KEEP=true
       shift
-      ;;	  
+      ;;
     -- )
       shift
       break
@@ -54,7 +54,7 @@ while true ; do
     *)
       echo "Internal error!"
       exit 1
-      ;;	  	  
+      ;;
   esac
 done
 
@@ -75,7 +75,7 @@ fi
 
 if [ "$PUSH" == "true" ] && [ "$REPOSITORY" == '' ]; then
 	echo "No repository given!" >&2
-	exit 1 
+	exit 1
 fi
 
 if [ ! -f ./$PROJECT/Dockerfile ]; then
@@ -91,12 +91,12 @@ cd ./$PROJECT
 IFS=,
 TAB=$'\t'
 rm -f Dockerfile.*
-for docker_arch in $ARCHITECTURES 
+for docker_arch in $ARCHITECTURES
 do
 	cp Dockerfile Dockerfile.${docker_arch}
-	sed -i '' -E "s|FROM([${TAB} ]+)debian:|FROM\1${docker_arch}/debian:|g" Dockerfile.${docker_arch}
-  sed -i '' -E "s|FROM([${TAB} ]+)$REPOSITORY([^${TAB}: ]+) |FROM\1$REPOSITORY\2:$docker_arch |g" Dockerfile.${docker_arch}
-  docker build -f Dockerfile.${docker_arch} -t $REPOSITORY$PROJECT:${docker_arch} .
+	sed -i -E "s|FROM([${TAB} ]+)debian:|FROM\1${docker_arch}/debian:|g" Dockerfile.${docker_arch}
+	sed -i -E "s|FROM([${TAB} ]+)$REPOSITORY([^${TAB}: ]+) |FROM\1$REPOSITORY\2:$docker_arch |g" Dockerfile.${docker_arch}
+	docker build -f Dockerfile.${docker_arch} -t $REPOSITORY$PROJECT:${docker_arch} .
 
   # push to repository
   if [ "$PUSH" == "true" ]; then
