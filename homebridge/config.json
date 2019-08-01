@@ -1,10 +1,10 @@
 
 {
     "bridge": {
-        "name": "Homebridge",
-        "username": "CC:22:3D:E3:CE:30",
-        "port": 51826,
-        "pin": "031-45-175"
+		"name": "Homebridge",
+		"username": "CC:22:3D:E3:CE:30",
+		"port": 51826,
+		"pin": "031-45-175"
     },
     
     "accessories": [
@@ -12,10 +12,26 @@
 
     "platforms": [
         {
-            "platform": "config",
-            "name": "Config",
-            "port": 8080,
-            "sudo": false
-        }
+		"platform": "config",
+		"name": "Config",
+		"port": 8080,
+		"sudo": false
+        },
+	{
+		"platform": "Camera-ffmpeg",	
+		"cameras": [
+			{
+				"name": "Camera Name",
+				"videoConfig": {
+					"source": "-re -i rtsp://myfancy_rtsp_stream",
+					"stillImageSource": "-i http://faster_still_image_grab_url/this_is_optional.jpg",
+					"maxStreams": 2,
+					"maxWidth": 1280,
+					"maxHeight": 720,
+					"maxFPS": 30
+				}
+			}
+		]
+	}
     ]
 }

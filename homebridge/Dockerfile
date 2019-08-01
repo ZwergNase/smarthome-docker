@@ -4,16 +4,22 @@ LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>"
 
 ENV     DEBIAN_FRONTEND noninteractive
 
-RUN	    addgroup node && \
-        adduser --system --ingroup node --disabled-password --uid 1000 node
+RUN	addgroup nodejs && \
+        adduser --system --ingroup nodejs --disabled-password --uid 1000 nodejs
 
-RUN     npm install -g --unsafe-perm --production homebridge && \
+RUN     apt-get update && \
+	apt-get --quiet --yes --no-install-recommends install \
+		ffmpeg && \
+	apt-get -q -y clean && \
+        rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+	npm install -g --unsafe-perm --production homebridge && \
         npm install -g --unsafe-perm --production homebridge-fhem  && \
-        npm install -g --unsafe-perm --production homebridge-config-ui-x
+        npm install -g --unsafe-perm --production homebridge-config-ui-x && \
+	npm install -g homebridge-camera-ffmpeg
 
-COPY    config.json /home/node/.homebridge/
-RUN     chown -R node:node /home/node
+COPY    config.json /home/nodejs/.homebridge/
+RUN     chown -R nodejs:nodejs /home/nodejs
 
-USER	node
+USER	nodejs
 
 CMD /usr/bin/homebridge
