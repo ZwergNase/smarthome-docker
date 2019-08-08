@@ -17,6 +17,7 @@ FROM	debian:stable-slim
 
 RUN	apt-get update && \
 	apt-get  --quiet --yes --no-install-recommends install \
+		lsb-base \
 		libev4 \
 		libusb-1.0-0 \
 		net-tools && \
