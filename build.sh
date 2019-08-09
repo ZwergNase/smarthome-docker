@@ -65,15 +65,10 @@ fi
 
 IFS=/
 read -r s1 s2 <<< "$1"
-if [ -z "$s2" ]; then
-	REPOSITORY=''
-	PROJECT=$s1
-else
-	REPOSITORY=$s1/
-	PROJECT=$s2
-fi
+REPOSITORY=$s1
+PROJECT=$s2
 
-if [ "$PUSH" == "true" ] && [ "$REPOSITORY" == '' ]; then
+if [ "$REPOSITORY" == '' ]; then
 	echo "No repository given!" >&2
 	exit 1
 fi
@@ -94,24 +89,26 @@ rm -f Dockerfile.*
 for docker_arch in $ARCHITECTURES
 do
 	cp Dockerfile Dockerfile.${docker_arch}
-	sed -i -E "s|FROM([${TAB} ]+)debian:|FROM\1${docker_arch}/debian:|g" Dockerfile.${docker_arch}
-	sed -i -E "s|FROM([${TAB} ]+)$REPOSITORY([^${TAB}: ]+) |FROM\1$REPOSITORY\2:$docker_arch |g" Dockerfile.${docker_arch}
-	docker build -f Dockerfile.${docker_arch} -t $REPOSITORY$PROJECT:${docker_arch} .
+  # prepend architecture only to official images (containing no '/')
+	sed -i '' -E "s|^(FROM[${TAB} ]+)([^/]+)$|\1${docker_arch}/\2|g" Dockerfile.${docker_arch}
+  # append architecture to my own images
+  sed -i '' -E "s|^(FROM[${TAB} ]+${REPOSITORY}/[^:${TAB} ]+)(.*)|\1-${docker_arch}\2|g" Dockerfile.${docker_arch}
+  docker build -f Dockerfile.${docker_arch} -t $REPOSITORY/$PROJECT-${docker_arch} .
 
   # push to repository
   if [ "$PUSH" == "true" ]; then
   	if [ "$BACKGROUND" == "true" ]; then
 			# run push in background
-			docker push $REPOSITORY$PROJECT:${docker_arch} &
+			docker push $REPOSITORY/$PROJECT-${docker_arch} &
 		else
-			docker push $REPOSITORY$PROJECT:${docker_arch}
+			docker push $REPOSITORY/$PROJECT-${docker_arch}
 		fi
 	fi
 
 	if [ "$KEEP" == "false" ]; then
 		rm Dockerfile.${docker_arch}
 	fi
-	arch_images="${arch_images} $REPOSITORY$PROJECT:${docker_arch}"
+	arch_images="${arch_images} $REPOSITORY/$PROJECT-${docker_arch}"
 done
 
 wait
