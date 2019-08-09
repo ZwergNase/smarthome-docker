@@ -90,9 +90,9 @@ for docker_arch in $ARCHITECTURES
 do
 	cp Dockerfile Dockerfile.${docker_arch}
   # prepend architecture only to official images (containing no '/')
-	sed -i '' -E "s|^(FROM[${TAB} ]+)([^/]+)$|\1${docker_arch}/\2|g" Dockerfile.${docker_arch}
+  sed -i -E "s|^(FROM[${TAB} ]+)([^/]+)$|\1${docker_arch}/\2|g" Dockerfile.${docker_arch}
   # append architecture to my own images
-  sed -i '' -E "s|^(FROM[${TAB} ]+${REPOSITORY}/[^:${TAB} ]+)(.*)|\1-${docker_arch}\2|g" Dockerfile.${docker_arch}
+  sed -i -E "s|^(FROM[${TAB} ]+${REPOSITORY}/[^:${TAB} ]+)(.*)|\1-${docker_arch}\2|g" Dockerfile.${docker_arch}
   docker build -f Dockerfile.${docker_arch} -t $REPOSITORY/$PROJECT-${docker_arch} .
 
   # push to repository
