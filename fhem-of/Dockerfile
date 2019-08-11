@@ -13,42 +13,44 @@ ENV     TZ Europe/Berlin
 
 RUN     apt-get update && \
         apt-get --quiet --yes --no-install-recommends install \
-		tzdata \
-		usbutils \
-		perl \
-		libtime-hires-perl \
-		libdevice-serialport-perl \
-		libjson-perl \
-		libio-socket-ssl-perl \
-		libpath-tiny-perl  \
-		liblinux-inotify2-perl \
-		libdata-dump-perl \
-		libfile-find-rule-perl \
-                libcrypt-rijndael-perl \
-                libdatetime-format-strptime-perl \
-		curl \
-		ca-certificates \
-		build-essential && \
-	apt-get -q -y clean && \
-	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
+			tzdata \
+			usbutils \
+			perl \
+			libtime-hires-perl \
+			libdevice-serialport-perl \
+			libjson-perl \
+			libio-socket-ssl-perl \
+			libpath-tiny-perl  \
+			liblinux-inotify2-perl \
+			libdata-dump-perl \
+			libfile-find-rule-perl \
+        	libcrypt-rijndael-perl \
+	        libdatetime-format-strptime-perl \
+			curl \
+			ca-certificates \
+			build-essential && \
+		apt-get -q -y clean && \
+		rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
 
 # Nodejs
-RUN     curl -sL https://deb.nodesource.com/setup_10.x | bash -
+RUN     curl -sL https://deb.nodesource.com/setup_12.x | bash -
 
-RUN	    apt-get --quiet --yes --no-install-recommends install \
-			gyp \
-            nodejs \
+RUN	apt-get update && \
+	apt-get --quiet --yes --no-install-recommends install \
+		nodejs \
+		gyp \
+		nodejs \
 		openssh-client && \
     	apt-get -q -y clean && \
-		rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
 
 # Alexa
 RUN     npm install -g --unsafe-perm --production alexa-fhem
 
 # fhem
-RUN		addgroup fhem && \
-		adduser --system --ingroup fhem --disabled-password --uid 1000 fhem && \
-		usermod -a -G dialout fhem
+RUN	addgroup fhem && \
+	adduser --system --ingroup fhem --disabled-password --uid 1000 fhem && \
+	usermod -a -G dialout fhem
 
 WORKDIR /opt/fhem/
 
