@@ -20,10 +20,10 @@ RUN     apt-get update && \
 			libdevice-serialport-perl \
 			libjson-perl \
 			libio-socket-ssl-perl \
-		        libpath-tiny-perl \
-	                liblinux-inotify2-perl \            
-        	        libdata-dump-perl \             
-                	libfile-find-rule-perl \  
+		    libpath-tiny-perl \
+	        liblinux-inotify2-perl \            
+        	libdata-dump-perl \             
+            libfile-find-rule-perl \  
 			libcrypt-rijndael-perl \
 			libdatetime-format-strptime-perl && \
 		apt-get -q -y clean && \
