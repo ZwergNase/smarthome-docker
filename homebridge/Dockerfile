@@ -5,7 +5,8 @@ LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>"
 ENV     DEBIAN_FRONTEND noninteractive
 
 RUN	addgroup nodejs && \
-        adduser --system --ingroup nodejs --disabled-password --uid 1000 nodejs
+        adduser --system --ingroup nodejs --disabled-password --uid 1000 nodejs && \
+	usermod -a -G video nodejs
 
 RUN     apt-get update && \
 	apt-get --quiet --yes --no-install-recommends install \
