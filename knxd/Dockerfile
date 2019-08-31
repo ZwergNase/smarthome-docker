@@ -24,17 +24,18 @@ RUN	apt-get update && \
 	apt-get -q -y clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
 
-RUN	adduser --system --disabled-password knxd && \
-	usermod -a -G dialout knxd 
-
 COPY	--from=builder /tmp/knxd_*.deb /tmp/
 COPY	--from=builder /tmp/knxd-tools_*.deb /tmp/
 
 RUN	dpkg -i /tmp/knxd*.deb
 
-USER	knxd
+RUN	usermod -a -G dialout knxd
+
 WORKDIR	/home/knxd
 COPY	*.ini ./
+RUN     chown -R knxd:knxd /home/knxd
+
+USER	knxd
 
 ENTRYPOINT ["knxd"]
 CMD ["knxd_ft12.ini"]
