@@ -1,0 +1,6 @@
+7c7,9
+< git pull
+---
+> git fetch
+> git checkout 4.x || git checkout -b 4.x origin/4.x
+> git merge origin/4.x
