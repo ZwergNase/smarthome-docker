@@ -1,4 +1,4 @@
-FROM    debian:buser-slim
+FROM    debian:buster-slim
 
 LABEL   maintainer="Oliver Friesen<oliver.friesen@gmail.com>"
 
@@ -21,7 +21,6 @@ RUN     apt-get update && \
 		dh-systemd \
 		libev-dev \
 		libsystemd-dev \
-		libsystemd-daemon-dev \
 		cmake \
 		wget \
 		cdbs \
