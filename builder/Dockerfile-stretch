@@ -21,7 +21,6 @@ RUN     apt-get update && \
 		dh-systemd \
 		libev-dev \
 		libsystemd-dev \
-		libsystemd-daemon-dev \
 		cmake \
 		wget \
 		cdbs \
