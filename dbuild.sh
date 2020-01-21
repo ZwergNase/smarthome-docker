@@ -90,6 +90,8 @@ if [ "$PUSH" == "false" ] && [ "$BACKGROUND" == "true" ]; then
 fi
 
 IFS=,
+
+ARCH_IMAGES=()
 for docker_arch in ${ARCHITECTURES}
 do
 	# prepend architecture only to official images (containing no '/')
@@ -118,7 +120,7 @@ do
 		rm ${PROJECT}/${DOCKERFILE}-${docker_arch}
 	fi
 
-	arch_images="${arch_images} $IMAGE"
+	ARCH_IMAGES+=($IMAGE)
 done
 
 wait
@@ -127,9 +129,9 @@ if [ "$MANIFEST" == "true" ]; then
         if [ "$VERSION" != '' ]; then
                 MANIFESTFILE=${MANIFESTFILE}-${VERSION}
         fi
-	rm -R ${MANIFESTFILE}
+	rm -Rf ${MANIFESTFILE}
 
-	docker manifest create "${REPOSITORY}/${PROJECT}:${VERSION}" ${arch_images}
+	docker manifest create ${REPOSITORY}/${PROJECT}:${VERSION}  ${ARCH_IMAGES[@]}
 	if [ "$PUSH" == "true" ]; then
 		docker login
 		docker manifest push ${REPOSITORY}/${PROJECT}:${VERSION}
