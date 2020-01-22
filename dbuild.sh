@@ -12,7 +12,7 @@ if ! [ -x "$(command -v sed)" ]; then
 fi
 
 # read the options
-OPTS=$(getopt -o pa:mbk --long push,architectures:,manifest,background,keep --name "$0" -- "$@")
+OPTS=$(getopt -o pa:bk --long push,architectures:,background,keep --name "$0" -- "$@")
 if [ $? != 0 ] ; then
 	echo "Failed to parse options...exiting." >&2
 	exit 1
@@ -35,10 +35,6 @@ while true ; do
     -a | --architectures )
       ARCHITECTURES="$2"
       shift 2
-      ;;
-    -m | --manifest )
-      MANIFEST=true
-      shift
       ;;
     -b | --background )
       BACKGROUND=true
@@ -122,18 +118,3 @@ do
 
 	ARCH_IMAGES+=($IMAGE)
 done
-
-wait
-if [ "$MANIFEST" == "true" ]; then
-	MANIFESTFILE=~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}
-        if [ "$VERSION" != '' ]; then
-                MANIFESTFILE=${MANIFESTFILE}-${VERSION}
-        fi
-	rm -Rf ${MANIFESTFILE}
-
-	docker manifest create ${REPOSITORY}/${PROJECT}:${VERSION}  ${ARCH_IMAGES[@]}
-	if [ "$PUSH" == "true" ]; then
-		docker login
-		docker manifest push ${REPOSITORY}/${PROJECT}:${VERSION}
-	fi
-fi
