@@ -15,18 +15,15 @@ RUN     apt-get update && \
 		autoconf \
 		automake \
 		libtool \
-		libusb-1.0-0-dev \
 		pkg-config \
-		libsystemd-dev \
-		dh-systemd \
-		libev-dev \
-		libsystemd-dev \
 		cmake \
 		wget \
 		cdbs \
 		ca-certificates \
 		nano \
-		subversion			
+		subversion && \
+                apt-get -q -y clean && \
+                rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN     adduser --system --disabled-password someuser
 
