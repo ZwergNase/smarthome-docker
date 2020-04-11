@@ -6,11 +6,14 @@ ENV	DEBIAN_FRONTEND noninteractive
 
 WORKDIR	/tmp
 
+USER	root
+
 RUN	apt-get update && \
         apt-get  --quiet --yes --no-install-recommends install \
 		libusb-1.0-0-dev \
 		libsystemd-dev \
 		libev-dev \
+		dh-systemd \
 		libsystemd-daemon-dev
 
 USER	someuser
@@ -25,31 +28,30 @@ RUN	git clone https://github.com/knxd/knxd.git && \
 	sed '/*/d' debian/knxd.install.systemd_ > debian/knxd.install.systemd && \
 	dpkg-buildpackage -b -uc
 
-FROM	debian:stable-slim
+FROM	debian:jessie-slim
 
 RUN	apt-get update && \
 	apt-get  --quiet --yes --no-install-recommends install \
 		lsb-base \
 		libev4 \
 		libusb-1.0-0 \
-		net-tools && \
+		net-tools \
+		init-system-helpers && \ 
 	apt-get -q -y clean && \
-	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
-
-RUN	adduser --system --disabled-password knxd && \
-	usermod -a -G dialout knxd 
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY	--from=builder /tmp/knxd_*.deb /tmp/
 COPY	--from=builder /tmp/knxd-tools_*.deb /tmp/
 
 RUN	dpkg -i /tmp/knxd*.deb
+RUN     usermod -a -G dialout knxd
 
 WORKDIR	/home/knxd
+
 COPY	*.ini ./
-RUN     chown -R knxd:knxd /home/knxd
+RUN	chown -R knxd:knxd /home/knxd
 
 USER	knxd
-WORKDIR	/home/knxd
 
 ENTRYPOINT ["knxd"]
 CMD ["knxd_ft12.ini"]

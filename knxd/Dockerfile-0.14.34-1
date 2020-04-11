@@ -9,7 +9,7 @@ WORKDIR	/tmp
 USER	root
 
 RUN	apt-get update && \
-        apt-get  install --quiet --yes \
+        apt-get  --quiet --yes --no-install-recommends install \
 		libusb-1.0-0-dev \
 		libsystemd-dev \
 		libev-dev 
@@ -21,7 +21,7 @@ RUN	git clone https://github.com/knxd/knxd.git && \
 	git checkout debian/0.14.34-1 && \ 
 	dpkg-buildpackage -b -uc
 
-FROM	debian:stable-slim
+FROM	debian:buster-slim
 
 RUN	apt-get update && \
 	apt-get  --quiet --yes --no-install-recommends install \
@@ -32,15 +32,14 @@ RUN	apt-get update && \
 	apt-get -q -y clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
 
-RUN	adduser --system --disabled-password knxd && \
-	usermod -a -G dialout knxd 
+COPY    --from=builder /tmp/knxd_*.deb /tmp/
+COPY    --from=builder /tmp/knxd-tools_*.deb /tmp/
 
-COPY	--from=builder /tmp/knxd_*.deb /tmp/
-COPY	--from=builder /tmp/knxd-tools_*.deb /tmp/
-
-RUN	dpkg -i /tmp/knxd*.deb
+RUN     dpkg -i /tmp/knxd*.deb
+RUN	usermod -a -G dialout knxd 
 
 WORKDIR	/home/knxd
+
 COPY	*.ini ./
 RUN     chown -R knxd:knxd /home/knxd
 
