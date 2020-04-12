@@ -4,11 +4,7 @@ LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>"
 
 ENV     DEBIAN_FRONTEND noninteractive
 
-RUN     svn --non-interactive --trust-server-cert co https://svn.fhem.de/fhem/trunk/fhem /tmp/fhem && \
-		svn info /tmp/fhem | sed -n -E 's/Revision: (.*)/---> tag ---> \1/p' && \
-		svn info /tmp/fhem | sed -n -E 's/Revision: (.*)/---> label ---> main-vcs-ref="\1"/p' && \
-		svn info /tmp/fhem | sed -n -E 's/^URL: (.*)/---> label ---> main-vcs-url="\1"/p' && \
-		svn info /tmp/fhem | sed -n -E 's/Last Changed Date: ([0-9-]+) ([0-9:]+).*/---> label ---> main-build-date="\1T\2Z"/p'
+RUN     svn --non-interactive --trust-server-cert co https://svn.fhem.de/fhem/trunk/fhem /tmp/fhem
 
 FROM    debian:stable-slim
 
@@ -45,9 +41,6 @@ RUN     chown -R fhem:fhem ../fhem
 COPY	--chown=fhem:fhem fhem.cfg /home/fhem/fhem.cfg
 
 USER	fhem
-
-RUN		sed -n -E 's/PRETTY_NAME=(.*)/---> label ---> os-version=\1/p' /etc/os-release && \
-		date -u +'---> label ---> os-last-update="%Y-%m-%dT%H:%M:%SZ"'		
 
 RUN     mv log ~/log && \
     	mv www/gplot ~/gplot && \
