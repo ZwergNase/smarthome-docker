@@ -18,16 +18,21 @@ RUN     apt-get update && \
 		perl \
 		libtime-hires-perl \
 		libdevice-serialport-perl \
-		libjson-perl \
 		libio-socket-ssl-perl \
+		libjson-perl \
 		libpath-tiny-perl \
+		libdatetime-perl \
 		liblinux-inotify2-perl \
 		libdata-dump-perl \
 		libfile-find-rule-perl \
 		libcrypt-rijndael-perl \
-		libdatetime-format-strptime-perl && \
 		apt-get -q -y clean && \
 		rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# basic dependencies: tzdata, usbutils, perl, libtime-hires-perl, libdevice-serialport-perl, libio-socket-ssl-perl
+# vitoconnect: libjson-perl, libpath-tiny-per, libdatetime-perl
+# inotfy: liblinux-inotify2-perl, libdata-dump-perl, libfile-find-rule-perl
+# SamsungAV: libcrypt-rijndael-perl
 
 RUN		addgroup fhem && \
 		adduser --system --ingroup fhem --disabled-password --uid 1000 fhem && \
