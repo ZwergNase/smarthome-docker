@@ -1,33 +1,33 @@
-FROM    oliverf/builder as builder
+FROM    oliverf/builder:buster as builder
 
 LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>" 
 
 ENV     DEBIAN_FRONTEND noninteractive
 
-RUN     svn --non-interactive --trust-server-cert co https://svn.fhem.de/fhem/trunk/fhem /tmp/fhem
+RUN     svn --non-interactive --trust-server-cert co https://svn.fhem.de/fhem/trunk/fhem@21642 /tmp/fhem
 
-FROM    debian:stable-slim
+FROM    debian:buster-slim
 
 ENV     DEBIAN_FRONTEND noninteractive
 ENV     TZ Europe/Berlin
 
 RUN     apt-get update && \
         apt-get --quiet --yes --no-install-recommends install \
-			tzdata \
-			usbutils \
-			perl \
-			libtime-hires-perl \
-			libdevice-serialport-perl \
-			libjson-perl \
-			libio-socket-ssl-perl \
-		    libpath-tiny-perl \
-	        liblinux-inotify2-perl \            
-        	libdata-dump-perl \             
-            libfile-find-rule-perl \  
-			libcrypt-rijndael-perl \
-			libdatetime-format-strptime-perl && \
+		tzdata \
+		usbutils \
+		perl \
+		libtime-hires-perl \
+		libdevice-serialport-perl \
+		libjson-perl \
+		libio-socket-ssl-perl \
+		libpath-tiny-perl \
+		liblinux-inotify2-perl \
+		libdata-dump-perl \
+		libfile-find-rule-perl \
+		libcrypt-rijndael-perl \
+		libdatetime-format-strptime-perl && \
 		apt-get -q -y clean && \
-		rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
+		rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN		addgroup fhem && \
 		adduser --system --ingroup fhem --disabled-password --uid 1000 fhem && \
