@@ -12,7 +12,7 @@ if ! [ -x "$(command -v sed)" ]; then
 fi
 
 # read the options
-OPTS=$(getopt -o pa:kl --long push,architectures:,keep,latest --name "$0" -- "$@")
+OPTS=$(getopt -o pa:klm --long push,architectures:,keep,latest,manifest --name "$0" -- "$@")
 if [ $? != 0 ] ; then
 	echo "Failed to parse options...exiting." >&2
 	exit 1
@@ -23,9 +23,9 @@ eval set -- "$OPTS"
 PUSH=false
 ARCHITECTURES=arm32v7,amd64
 MANIFEST=false
-BACKGROUND=false
 KEEP=false
 LATEST=false
+MANIFEST=false
 
 while true ; do
   case "$1" in
@@ -43,6 +43,10 @@ while true ; do
       ;;
     -l | --latest )
       LATEST=true
+      shift
+      ;;
+    -m | --manifest )
+      MANIFEST=true
       shift
       ;;
     -- )
@@ -67,6 +71,11 @@ read -r REPOSITORY temp <<< "$1"
 if [ "$temp" == '' ]; then
         echo "No repository given!" >&2
         exit 1
+fi
+
+if [ "$MANIFEST" == "true" ] && [ "$PUSH" == "false" ]; then
+	echo "Currently --manifest|-m is only supported with --push|-p" >&2
+	exit 1
 fi
 
 IFS=:
@@ -107,6 +116,7 @@ do
 
 	# push to repository
 	if [ "$PUSH" == "true" ]; then
+		docker login
 		docker push $IMAGE
 		if [ "$LATEST" == "true" ]; then docker push ${IMAGE_LATEST}; fi
 	fi
@@ -116,4 +126,30 @@ do
 	fi
 
 	ARCH_IMAGES+=($IMAGE)
+	ARCH_IMAGES_LATEST+=($IMAGE_LATEST)
 done
+
+if [ "$MANIFEST" == "true" ]; then
+	MANIFEST=${REPOSITORY}/${PROJECT}
+	MANIFEST_LATEST=${MANIFEST}:latest
+        if [ "$VERSION" != '' ]; then
+                MANIFEST=${MANIFEST}:${VERSION}
+        fi
+
+	MANIFESTFILE=~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}
+        MANIFESTFILE_LATEST=${MANIFESTFILE}-latest
+	if [ "$VERSION" != '' ]; then
+                MANIFESTFILE=${MANIFESTFILE}-${VERSION}
+        fi
+	rm -R ${MANIFESTFILE}
+        if [ "$LATEST" == "true" ]; then
+		rm -R ${MANIFESTFILE_LATEST}
+	fi
+
+	docker manifest create ${MANIFEST} ${ARCH_IMAGES[@]}
+	docker manifest push ${MANIFEST}
+	if [ "$LATEST" == "true" ]; then
+		docker manifest create ${MANIFEST_LATEST} ${ARCH_IMAGES_LATEST[@]}
+		docker manifest push ${MANIFEST_LATEST}
+	fi
+fi
