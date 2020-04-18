@@ -12,7 +12,7 @@ if ! [ -x "$(command -v sed)" ]; then
 fi
 
 # read the options
-OPTS=$(getopt -o pa:bk --long push,architectures:,background,keep --name "$0" -- "$@")
+OPTS=$(getopt -o pa:bkl --long push,architectures:,background,keep,latest --name "$0" -- "$@")
 if [ $? != 0 ] ; then
 	echo "Failed to parse options...exiting." >&2
 	exit 1
@@ -25,6 +25,7 @@ ARCHITECTURES=arm32v7,amd64
 MANIFEST=false
 BACKGROUND=false
 KEEP=false
+LATEST=false
 
 while true ; do
   case "$1" in
@@ -42,6 +43,10 @@ while true ; do
       ;;
     -k | --keep )
       KEEP=true
+      shift
+      ;;
+    -l | --latest )
+      LATEST=true
       shift
       ;;
     -- )
@@ -96,11 +101,17 @@ do
 	sed -E "s|^(FROM[${TAB} ]+${REPOSITORY}/[^:${TAB} ]+)(.*)|\1-${docker_arch}\2|g" > ${PROJECT}/${DOCKERFILE}-${docker_arch}
 
 	IMAGE=${REPOSITORY}/${PROJECT}-${docker_arch}
+	IMAGE_LATEST=${IMAGE}:latest
 	if [ "$VERSION" != '' ]; then
 		IMAGE=${IMAGE}:${VERSION}
 	fi
 
-	docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} ${PROJECT}
+	if [ "$LATEST" == "false" ]; then
+		docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} ${PROJECT}
+	else
+		# tag image latest
+                docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} -t ${IMAGE_LATEST} ${PROJECT}
+	fi
 
 	# push to repository
 	if [ "$PUSH" == "true" ]; then
