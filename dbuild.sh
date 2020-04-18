@@ -12,7 +12,7 @@ if ! [ -x "$(command -v sed)" ]; then
 fi
 
 # read the options
-OPTS=$(getopt -o pa:bkl --long push,architectures:,background,keep,latest --name "$0" -- "$@")
+OPTS=$(getopt -o pa:kl --long push,architectures:,keep,latest --name "$0" -- "$@")
 if [ $? != 0 ] ; then
 	echo "Failed to parse options...exiting." >&2
 	exit 1
@@ -36,10 +36,6 @@ while true ; do
     -a | --architectures )
       ARCHITECTURES="$2"
       shift 2
-      ;;
-    -b | --background )
-      BACKGROUND=true
-      shift
       ;;
     -k | --keep )
       KEEP=true
@@ -86,10 +82,6 @@ if [ ! -f "./${PROJECT}/${DOCKERFILE}" ]; then
 	exit 1
 fi
 
-if [ "$PUSH" == "false" ] && [ "$BACKGROUND" == "true" ]; then
-	echo "INFO: Option -b or --background has no effect without -p oder --push." >&2
-fi
-
 IFS=,
 
 ARCH_IMAGES=()
@@ -115,14 +107,8 @@ do
 
 	# push to repository
 	if [ "$PUSH" == "true" ]; then
-#		if [ "$BACKGROUND" == "true" ]; then
-#			# run push in background
-#				docker push ${IMAGE} &
-#			        if [ "$LATEST" == "true" ]; then docker push ${IMAGE_LATEST} &; fi
-#			else
-				docker push $IMAGE
-				if [ "$LATEST" == "true" ]; then docker push ${IMAGE_LATEST}; fi
-#		fi
+		docker push $IMAGE
+		if [ "$LATEST" == "true" ]; then docker push ${IMAGE_LATEST}; fi
 	fi
 
 	if [ "$KEEP" == "false" ]; then
