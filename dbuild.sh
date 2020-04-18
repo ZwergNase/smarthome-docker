@@ -115,12 +115,14 @@ do
 
 	# push to repository
 	if [ "$PUSH" == "true" ]; then
-		if [ "$BACKGROUND" == "true" ]; then
-			# run push in background
-				docker push $IMAGE &
-			else
+#		if [ "$BACKGROUND" == "true" ]; then
+#			# run push in background
+#				docker push ${IMAGE} &
+#			        if [ "$LATEST" == "true" ]; then docker push ${IMAGE_LATEST} &; fi
+#			else
 				docker push $IMAGE
-		fi
+				if [ "$LATEST" == "true" ]; then docker push ${IMAGE_LATEST}; fi
+#		fi
 	fi
 
 	if [ "$KEEP" == "false" ]; then
