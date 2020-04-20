@@ -18,7 +18,10 @@ RUN     apt-get update && \
 		perl \
 		libtime-hires-perl \
 		libdevice-serialport-perl \
-		libio-socket-ssl-perl && \
+		libio-socket-ssl-perl \
+		libjson-perl \
+                libpath-tiny-perl \
+                libdatetime-perl && \
 	apt-get -q -y clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
