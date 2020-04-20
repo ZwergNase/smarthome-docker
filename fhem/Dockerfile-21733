@@ -21,7 +21,10 @@ RUN     apt-get update && \
 		libio-socket-ssl-perl \
 		libjson-perl \
                 libpath-tiny-perl \
-                libdatetime-perl && \
+                libdatetime-perl \
+		liblinux-inotify2-perl \
+                libdata-dump-perl \
+                libfile-find-rule-perl && \
 	apt-get -q -y clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
