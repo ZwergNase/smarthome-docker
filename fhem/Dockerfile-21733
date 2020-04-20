@@ -24,7 +24,8 @@ RUN     apt-get update && \
                 libdatetime-perl \
 		liblinux-inotify2-perl \
                 libdata-dump-perl \
-                libfile-find-rule-perl && \
+                libfile-find-rule-perl \
+		libcrypt-rijndael-perl && \
 	apt-get -q -y clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
