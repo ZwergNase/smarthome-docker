@@ -25,12 +25,12 @@ RUN     apt-get update && \
 		liblinux-inotify2-perl \
                 libdata-dump-perl \
                 libfile-find-rule-perl \
-		libcrypt-rijndael-perl 
+		libcrypt-rijndael-perl \
 		libsoap-lite-perl \
 		libwww-perl \
 		libxml-simple-perl \
 		libxml-parser-lite-perl \
-		libwww-perl&& \
+		libwww-perl && \
 	apt-get -q -y clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
