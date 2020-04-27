@@ -51,9 +51,10 @@ RUN     mv fhem.cfg fhem.cfg.original && \
 	mv log /home/fhem/log && \
 	mv www/gplot /home/fhem/gplot && \
 	mkdir /home/fhem/restoreDir && \
-        ln -s /home/fhem/log log && \
+	touch /home/fhem/uniqueID && \
 	ln -s /home/fhem/gplot www/gplot && \
 	ln -s /home/fhem/restoreDir restoreDir
+	ln -s /home/fhem/uniqueID FHEM/FhemUtils/uniqueID
 
 EXPOSE  8083 8084 8085 7072
 
