@@ -1,0 +1,24 @@
+FROM    debian:buster-slim
+
+ENV     DEBIAN_FRONTEND noninteractive
+ENV     TZ Europe/Berlin
+
+RUN     apt-get update && \
+        apt-get --quiet --yes --no-install-recommends install \
+		tzdata \
+		samba=2:4.9.5+dfsg-5+deb10u1 && \
+	apt-get -q -y clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN	addgroup --gid 1000 samba && \
+	adduser --system --disabled-password --ingroup samba --uid 1000 samba && \
+	chmod og-wrx /home/samba
+
+WORKDIR	/home/samba
+
+COPY	passdb smb.conf start.sh ./
+COPY	smbpasswd_internal.sh ./smbpasswd.sh
+RUN	chmod og-wrx passdb && \
+	chown samba:samba smb.conf start.sh smbpasswd.sh
+
+CMD [ "/bin/bash", "start.sh"]
