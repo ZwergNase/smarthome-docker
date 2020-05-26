@@ -10,6 +10,8 @@ RUN     apt-get update && \
 	apt-get -q -y clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+RUN	chmod og-wrx /etc/skel
+
 RUN	addgroup --gid 1000 samba && \
 	adduser --system --disabled-password --ingroup samba --uid 1000 samba && \
 	chmod og-wrx /home/samba
@@ -18,7 +20,6 @@ WORKDIR	/home/samba
 
 COPY	passdb smb.conf start.sh ./
 COPY	smbpasswd_internal.sh ./smbpasswd.sh
-RUN	chmod og-wrx passdb && \
-	chown samba:samba smb.conf start.sh smbpasswd.sh
+RUN	chown samba:samba smb.conf start.sh smbpasswd.sh
 
 CMD [ "/bin/bash", "start.sh"]
