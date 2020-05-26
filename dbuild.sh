@@ -148,8 +148,10 @@ if [ "$MANIFEST" == "true" ]; then
 
 	docker manifest create ${MANIFEST} ${ARCH_IMAGES[@]}
 	docker manifest push ${MANIFEST}
+	docker pull ${MANIFEST}
 	if [ "$LATEST" == "true" ]; then
 		docker manifest create ${MANIFEST_LATEST} ${ARCH_IMAGES_LATEST[@]}
 		docker manifest push ${MANIFEST_LATEST}
+		docker pull ${MANIFEST_LATEST}
 	fi
 fi
