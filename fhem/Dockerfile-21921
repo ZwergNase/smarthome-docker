@@ -34,9 +34,10 @@ RUN     apt-get update && \
 	apt-get -q -y clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN	addgroup fhem && \
-	adduser --system --ingroup fhem --disabled-password --uid 1000 fhem && \
-	usermod -a -G dialout fhem
+RUN	addgroup --gid 1000 fhem && \
+	adduser --disabled-login --shell /usr/sbin/nologin --gecos "" --ingroup fhem --uid 1000 fhem && \
+	usermod -a -G dialout fhem && \
+	chmod go-wrx /home/fhem
 
 WORKDIR /opt/fhem/
 
