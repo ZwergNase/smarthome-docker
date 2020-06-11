@@ -1,0 +1,62 @@
+FROM    oliverf/builder:buster as builder
+
+LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>" 
+
+ENV     DEBIAN_FRONTEND noninteractive
+
+RUN     svn --non-interactive --trust-server-cert co https://svn.fhem.de/fhem/trunk/fhem@22037 /tmp/fhem
+
+FROM    debian:buster-slim
+
+ENV     DEBIAN_FRONTEND noninteractive
+ENV     TZ Europe/Berlin
+
+RUN     apt-get update && \
+        apt-get --quiet --yes --no-install-recommends install \
+		tzdata \
+		usbutils \
+		perl \
+		libtime-hires-perl \
+		libdevice-serialport-perl \
+		libio-socket-ssl-perl \
+		libjson-perl \
+                libpath-tiny-perl \
+                libdatetime-perl \
+		liblinux-inotify2-perl \
+                libdata-dump-perl \
+                libfile-find-rule-perl \
+		libcrypt-rijndael-perl \
+		libsoap-lite-perl \
+		libwww-perl \
+		libxml-simple-perl \
+		libxml-parser-lite-perl \
+		libwww-perl && \
+	apt-get -q -y clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN	addgroup --gid 1000 fhem && \
+	adduser --disabled-login --shell /usr/sbin/nologin --gecos "" --ingroup fhem --uid 1000 fhem && \
+	usermod -a -G dialout fhem && \
+	chmod go-wrx /home/fhem
+
+WORKDIR /opt/fhem/
+
+COPY   --from=builder /tmp/fhem .
+RUN     chown -R fhem:fhem ../fhem
+
+USER	fhem
+
+COPY	--chown=fhem:fhem fhem.cfg /home/fhem/fhem.cfg
+
+RUN     mv fhem.cfg fhem.cfg.original && \
+	mv log /home/fhem/log && \
+	mv www/gplot /home/fhem/gplot && \
+	mkdir /home/fhem/restoreDir && \
+	touch /home/fhem/uniqueID && \
+	ln -s /home/fhem/gplot www/gplot && \
+	ln -s /home/fhem/restoreDir restoreDir && \
+	ln -s /home/fhem/uniqueID FHEM/FhemUtils/uniqueID
+
+EXPOSE  8083 8084 8085 7072
+
+CMD     ["perl", "fhem.pl", "/home/fhem/fhem.cfg"]
