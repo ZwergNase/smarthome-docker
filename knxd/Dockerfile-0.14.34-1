@@ -36,7 +36,12 @@ COPY    --from=builder /tmp/knxd_*.deb /tmp/
 COPY    --from=builder /tmp/knxd-tools_*.deb /tmp/
 
 RUN     dpkg -i /tmp/knxd*.deb
-RUN	usermod -a -G dialout knxd 
+
+RUN	deluser knxd && \
+	addgroup --gid 1000 knxd && \
+        adduser --disabled-login --shell /usr/sbin/nologin --gecos "" --ingroup knxd --uid 1000 knxd && \
+        usermod -a -G dialout knxd && \
+	chmod go-wrx /home/knxd
 
 WORKDIR	/home/knxd
 
@@ -44,7 +49,6 @@ COPY	*.ini ./
 RUN     chown -R knxd:knxd /home/knxd
 
 USER	knxd
-WORKDIR	/home/knxd
 
 ENTRYPOINT ["knxd"]
 CMD ["knxd_ft12.ini"]
