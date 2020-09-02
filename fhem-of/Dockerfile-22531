@@ -1,0 +1,14 @@
+FROM    oliverf/fhem-alexa:22531
+
+LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>" 
+
+WORKDIR	/opt/fhem
+
+RUN	printf "attr global logfile temp.log\nattr global modpath .\nattr global statefile temp.save\ndefine telnetPort telnet 7072 global" > temp.cfg && \
+	perl fhem.pl temp.cfg & \
+	sleep 10 && \
+	perl fhem.pl localhost:7072 "update force https://raw.githubusercontent.com/herrmannj/fronthem/master/controls_fronthem.txt" && \
+	perl fhem.pl localhost:7072 shutdown && \
+	rm temp*
+
+COPY    --chown=fhem:fhem 32_WifiLight.pm FHEM/
