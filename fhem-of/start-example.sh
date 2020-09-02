@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo docker run --detach  --restart=always --name fhem-alexa --mount source=fhem_data,target=/home/fhem --mount source=weewx_share,target=/var/www/weewx --device /dev/ttyUSB0:/dev/ttyUSB0 --publish 8083-8085:8083-8085 oliverf/fhem-of:latest
+sudo docker run --detach  --restart=always --name fhem-of --mount source=fhem_data,target=/home/fhem --mount source=weewx_share,target=/var/www/weewx --device /dev/ttyUSB0:/dev/ttyUSB0 --publish 8083-8085:8083-8085 --publish 2121:2121 oliverf/fhem-of:latest
 
 # --detach                                      	im Hintergrund ausführen / run in background
 # --restart=always                              	Container automatisch (neu)starten / (re)start container automaticly
