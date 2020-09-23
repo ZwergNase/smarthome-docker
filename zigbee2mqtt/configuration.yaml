@@ -1,0 +1,13 @@
+homeassistant: false
+permit_join: false
+mqtt:
+  base_topic: zigbee2mqtt
+  server: 'mqtt://192.168.179.29'
+  client_id: zigbee_pi
+serial:
+  port: /dev/ttyACM0
+  disable_led: false
+advanced:
+  network_key: GENERATE
+  log_output: 
+    - console
