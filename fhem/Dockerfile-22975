@@ -32,6 +32,9 @@ RUN     apt-get update && \
 		libxml-simple-perl \
 		libxml-parser-lite-perl \
 		libwww-perl \
+		libtext-diff-perl \
+		libdbi-perl \
+		libdbd-mysql-perl \
 		build-essential \
 		cpanminus && \
 	perl -MCPAN -e 'install Net::WebSocket::Server' && \
@@ -62,10 +65,12 @@ RUN     mv fhem.cfg fhem.cfg.original && \
 	mv www/gplot /home/fhem/gplot && \
 	mkdir /home/fhem/restoreDir && \
 	touch /home/fhem/uniqueID && \
+	touch /home/fhem/configDB.conf && \
 	ln -s /home/fhem/gplot www/gplot && \
 	ln -s /home/fhem/restoreDir restoreDir && \
 	ln -s /home/fhem/uniqueID FHEM/FhemUtils/uniqueID && \
-	ln -s /home/fhem/fronthem www/fronthem
+	ln -s /home/fhem/fronthem www/fronthem && \
+	ln -s /home/fhem/configDB.conf configDB.conf
 
 EXPOSE  8083 8084 8085 7072
 
