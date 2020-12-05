@@ -12,7 +12,7 @@ if ! [ -x "$(command -v sed)" ]; then
 fi
 
 # read the options
-OPTS=$(getopt -o pa:klm --long push,architectures:,keep,latest,manifest --name "$0" -- "$@")
+OPTS=$(getopt -o pa:klmfn --long push,architectures:,keep,latest,manifest,forcelatest,no-cache --name "$0" -- "$@")
 if [ $? != 0 ] ; then
 	echo "Failed to parse options...exiting." >&2
 	exit 1
@@ -26,6 +26,8 @@ MANIFEST=false
 KEEP=false
 LATEST=false
 MANIFEST=false
+FORCELATEST=false
+NOCACHE=false
 
 while true ; do
   case "$1" in
@@ -47,6 +49,14 @@ while true ; do
       ;;
     -m | --manifest )
       MANIFEST=true
+      shift
+      ;;
+    -f | --forelatest )
+      FORCELATEST=true
+      shift
+      ;;
+    -n | --no-cache )
+      NOCACHE=true
       shift
       ;;
     -- )
@@ -78,6 +88,10 @@ if [ "$MANIFEST" == "true" ] && [ "$PUSH" == "false" ]; then
 	exit 1
 fi
 
+if [ "$NOCACHE" == "true" ]; then
+	CACHEOPTION='--no-cache'
+fi
+
 IFS=:
 read -r PROJECT VERSION <<< "$temp"
 
@@ -107,11 +121,15 @@ do
 		IMAGE=${IMAGE}:${VERSION}
 	fi
 
+        if [ "$FORCELATEST" == "true" ]; then
+                sed -n 's/FROM[ \t]\+\(.*:latest\)[ \t]*.*/docker pull \1/pe' ${PROJECT}/${DOCKERFILE}-${docker_arch}
+        fi
+
 	if [ "$LATEST" == "false" ]; then
-		docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} ${PROJECT}
+		docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} ${CACHEOPTION} ${PROJECT}
 	else
 		# tag image latest
-                docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} -t ${IMAGE_LATEST} ${PROJECT}
+                docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} -t ${IMAGE_LATEST} ${CACHEOPTION} ${PROJECT}
 	fi
 
 	# push to repository
