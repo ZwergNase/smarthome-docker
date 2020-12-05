@@ -1,4 +1,4 @@
-FROM    oliverf/builder:buster as builder
+FROM    oliverf/builder:latest as builder
 
 LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>" 
 
@@ -6,7 +6,7 @@ ENV     DEBIAN_FRONTEND noninteractive
 
 RUN     svn --non-interactive --trust-server-cert co https://svn.fhem.de/fhem/trunk/fhem@23156 /tmp/fhem
 
-FROM    debian:buster-slim
+FROM    oliverf/smarthome-base:latest
 
 ENV     DEBIAN_FRONTEND noninteractive
 ENV     TZ Europe/Berlin

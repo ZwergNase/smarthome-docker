@@ -1,0 +1,10 @@
+FROM    debian:buster-slim
+
+LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>" 
+
+ENV     DEBIAN_FRONTEND noninteractive
+ENV     TZ Europe/Berlin
+
+RUN     apt-get update && \
+        apt-get --quiet --yes clean && \
+        rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

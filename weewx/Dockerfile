@@ -1,4 +1,4 @@
-FROM    debian:stable-slim
+FROM    oliverf/smarthome-base:latest
 
 LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>"
 

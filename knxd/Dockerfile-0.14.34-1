@@ -1,4 +1,4 @@
-FROM	oliverf/builder:buster AS builder
+FROM	oliverf/builder:latest AS builder
 
 LABEL	maintainer="Oliver Friesen<oliver.friesen@gmail.com>"
 
@@ -21,7 +21,7 @@ RUN	git clone https://github.com/knxd/knxd.git && \
 	git checkout debian/0.14.34-1 && \ 
 	dpkg-buildpackage -b -uc
 
-FROM	debian:buster-slim
+FROM	oliverf/smarthome-base:latest
 
 RUN	apt-get update && \
 	apt-get  --quiet --yes --no-install-recommends install \
