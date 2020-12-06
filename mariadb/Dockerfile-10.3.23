@@ -1,0 +1,27 @@
+FROM    oliverf/smarthome-base:latest
+
+ENV     DEBIAN_FRONTEND noninteractive
+ENV     TZ Europe/Berlin
+
+RUN     apt-get update && \
+        apt-get --quiet --yes --no-install-recommends install \
+		tzdata \
+		mariadb-server=1:10.3.23-0+deb10u1 && \
+	apt-get -q -y clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+	rm -rf /var/lib/mysql/
+
+RUN	addgroup --gid 1000 mariadb && \
+	adduser --system --disabled-password --ingroup mariadb --uid 1000 mariadb && \
+	chmod og-wrx /home/mariadb && \
+	chown mariadb:mariadb /home/mariadb && \
+	mkdir /run/mysqld/ && \
+	chown mariadb:mariadb /run/mysqld/
+
+WORKDIR	/home/mariadb
+COPY	my.cnf initLogDB_internal.sh ./
+RUN	mkdir db && \
+	chown -R mariadb:mariadb /home/mariadb/* && \
+	mysql_install_db --defaults-file=/home/mariadb/my.cnf
+
+CMD [ "/bin/bash", "mysqld --defaults-file=/home/mariadb/my.cnf"]
