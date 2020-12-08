@@ -39,6 +39,8 @@ CREATE TABLE "current" (
     "VALUE" varchar(255) DEFAULT NULL,
     "UNIT" varchar(32) DEFAULT NULL
 );
+
+CREATE INDEX Search_Idx ON "history" (DEVICE, READING, TIMESTAMP) USING BTREE;
 EOF
 
 sql=${sql//\"/\`}
