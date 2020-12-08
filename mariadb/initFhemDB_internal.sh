@@ -48,16 +48,23 @@ if [ $? -eq 0 ]
 then
 	echo "Successfully created LogDB!"
 	echo ""
-	echo "db.conf:"
+	echo "db.conf"
 	echo "===================="
 	echo "%dbconfig= ("
 	echo "  connection => \"mysql:database=$3;host=XXX.XXX.XXX.XXX;port=3306\","
 	echo "  user => \"$1\","
 	echo "  password => \"$2\","
 	echo ");"
-	echo "===================="
 	echo ""
 	echo "Replace XXX.XXX.XXX.XXX by correct ip!"
+	echo ""
+	echo "DBLog"
+	echo "====="
+	echo "fhem comand: define DBLogging DbLog /home/fhem/configDB.conf .*:.*"
+	echo ""
+	echo "configDB"
+	echo "========"
+	echo "fhem command: configdb migrate"
 else
 	echo "Error creating LogDB!" >&2
 fi
