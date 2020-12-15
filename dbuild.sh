@@ -1,5 +1,6 @@
 #!/bin/bash
 TAB=$'\t'
+EOL=$'\n'
 
 if ! [ -x "$(command -v getopt)" ]; then
   echo 'Error: getopt is not installed.' >&2
@@ -11,8 +12,19 @@ if ! [ -x "$(command -v sed)" ]; then
   exit 1
 fi
 
+function execute {
+	if [ $VERBOUSE = 'true' ] || [ $SUPERVERBOUSE = 'true' ]; then
+		[ "$2" != '' ] && echo "${2}:"
+		[ "$1" != '' ] && echo "* ${1}"
+	fi
+	[ "$1" != '' ] && EXECUTE_STDOUT=$(eval $1 2>&1) 
+	if [ $SUPERVERBOUSE = 'true' ]; then
+		[ "$EXECUTE_STDOUT" != '' ] && echo $EXECUTE_STDOUT
+	fi
+}
+
 # read the options
-OPTS=$(getopt -o pa:klmfn --long push,architectures:,keep,latest,manifest,forcelatest,no-cache --name "$0" -- "$@")
+OPTS=$(getopt -o pa:klmfnv --long push,architectures:,keep,latest,manifest,forcelatest,no-cache,verbouse,superverbouse --name "$0" -- "$@")
 if [ $? != 0 ] ; then
 	echo "Failed to parse options...exiting." >&2
 	exit 1
@@ -28,6 +40,8 @@ LATEST=false
 MANIFEST=false
 FORCELATEST=false
 NOCACHE=false
+VERBOUSE=false
+SUPERVERBOUSE=false
 
 while true ; do
   case "$1" in
@@ -59,6 +73,18 @@ while true ; do
       NOCACHE=true
       shift
       ;;
+    -v | --verbouse )
+	if [ $VERBOUSE == 'true' ]; then
+		SUPERVERBOUSE=true
+	else
+	      VERBOUSE=true
+	fi
+      shift
+      ;;
+    --superverbouse )
+      SUPERVERBOUSE=true
+      shift
+      ;;
     -- )
       shift
       break
@@ -78,7 +104,7 @@ fi
 IFS=/
 read -r REPOSITORY temp <<< "$1"
 
-if [ "$temp" == '' ]; then
+ if [ "$temp" == '' ]; then
         echo "No repository given!" >&2
         exit 1
 fi
@@ -88,17 +114,13 @@ if [ "$MANIFEST" == "true" ] && [ "$PUSH" == "false" ]; then
 	exit 1
 fi
 
-if [ "$NOCACHE" == "true" ]; then
-	CACHEOPTION='--no-cache'
-fi
+[ "$NOCACHE" == "true" ] && CACHEOPTION='--no-cache'
 
 IFS=:
 read -r PROJECT VERSION <<< "$temp"
 
 DOCKERFILE=Dockerfile
-if [ "$VERSION" != '' ]; then
-	DOCKERFILE="${DOCKERFILE}-${VERSION}"
-fi
+[ "$VERSION" != '' ] && DOCKERFILE="${DOCKERFILE}-${VERSION}"
 
 if [ ! -f "./${PROJECT}/${DOCKERFILE}" ]; then
 	echo "Project folder or dockerfile not found \"./${PROJECT}/${DOCKERFILE}\"!" >&2
@@ -106,8 +128,8 @@ if [ ! -f "./${PROJECT}/${DOCKERFILE}" ]; then
 fi
 
 IFS=,
-
-ARCH_IMAGES=()
+declare -A ARCH_IMAGES
+declare -A ARCH_IMAGES_LATEST
 for docker_arch in ${ARCHITECTURES}
 do
 	# prepend architecture only to official images (containing no '/')
@@ -115,61 +137,81 @@ do
 	# append architecture to my own images
 	sed -E "s|^(FROM[${TAB} ]+${REPOSITORY}/[^:${TAB} ]+)(.*)|\1-${docker_arch}\2|g" > ${PROJECT}/${DOCKERFILE}-${docker_arch}
 
-	IMAGE=${REPOSITORY}/${PROJECT}-${docker_arch}
-	IMAGE_LATEST=${IMAGE}:latest
-	if [ "$VERSION" != '' ]; then
-		IMAGE=${IMAGE}:${VERSION}
+	[ "$FORCELATEST" == "true" ] && execute "sed -n 's/FROM[ \t]\+\(.*:latest\)[ \t]*.*/docker pull \1/pe' ${PROJECT}/${DOCKERFILE}-${docker_arch}" 'pull latest version of images'
+
+	execute "docker build -f \"${PROJECT}/${DOCKERFILE}-${docker_arch}\" ${CACHEOPTION} ${PROJECT}" 'build all images in dockerfile'
+
+	TEMP=${EXECUTE_STDOUT}
+	FIND_LABELS=${TEMP//[$'\n\r']}
+	FIND_LABELS=${FIND_LABELS//LABEL/${EOL}LABEL}
+	mapfile -t < <(echo ${FIND_LABELS} | sed -n "s/^LABEL[ \t]*image=\([^ \t]*\) --->[^-]*---> \([0-9a-f]*\).*/\2,\1/p")
+	unset IMAGES
+	declare -A IMAGES
+	for var in "${MAPFILE[@]}"
+	do
+		IFS=, read HASH NAME <<< ${var}
+		IMAGES["$HASH"]=${NAME}
+	done
+	if [ ${#IMAGES[@]} -eq 0 ]; then
+		HASH=$(echo ${TEMP} | sed -n 's/Successfully built \([0-9a-f]*\)/\1/p')
+		IMAGES[$HASH]=${PROJECT}
 	fi
+        [ "$PUSH" == "true" ] && execute "docker login" 'log into repository'
 
-        if [ "$FORCELATEST" == "true" ]; then
-                sed -n 's/FROM[ \t]\+\(.*:latest\)[ \t]*.*/docker pull \1/pe' ${PROJECT}/${DOCKERFILE}-${docker_arch}
-        fi
 
-	if [ "$LATEST" == "false" ]; then
-		docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} ${CACHEOPTION} ${PROJECT}
-	else
-		# tag image latest
-                docker build -f "${PROJECT}/${DOCKERFILE}-${docker_arch}" -t ${IMAGE} -t ${IMAGE_LATEST} ${CACHEOPTION} ${PROJECT}
-	fi
+	execute '' 'tag all images'
+	for HASH in "${!IMAGES[@]}"
+	do
+	        NAME=${IMAGES[$HASH]}
+		if [ "$VERSION" != '' ]; then
+        	        execute "docker tag ${HASH} ${REPOSITORY}/${NAME}-${docker_arch}:${VERSION}"
+			ARCH_IMAGES["$NAME"]+=" ${REPOSITORY}/${IMAGES[$HASH]}-${docker_arch}:${VERSION}"
+			[ "$PUSH" == "true" ] && execute "docker push ${REPOSITORY}/${NAME}-${docker_arch}:${VERSION}"
+        	else
+                	execute "docker tag ${HASH} ${REPOSITORY}/${IMAGES[$HASH]}-${docker_arch}"
+			ARCH_IMAGES["$NAME"]+=" ${REPOSITORY}/${IMAGES[$HASH]}-${docker_arch}"
+        		[ "$PUSH" == "true" ] && execute "docker push ${REPOSITORY}/${IMAGES[$HASH]}-${docker_arch}"
+		fi
+        	if [ "$LATEST" == "true" ]; then
+                	execute "docker tag ${HASH} ${REPOSITORY}/${IMAGES[$HASH]}-${docker_arch}:latest"
+			ARCH_IMAGES_LATEST["$NAME"]+=" ${REPOSITORY}/${IMAGES[$HASH]}-${docker_arch}:latest"
+			[ "$PUSH" == "true" ] && execute "docker push ${REPOSITORY}/${IMAGES[$HASH]}-${docker_arch}:latest"
+        	fi
+	done
 
-	# push to repository
-	if [ "$PUSH" == "true" ]; then
-		docker login
-		docker push $IMAGE
-		if [ "$LATEST" == "true" ]; then docker push ${IMAGE_LATEST}; fi
-	fi
+	FIND_SUPERFLUOUS=${TEMP//[$'\n\r']}
+	FIND_SUPERFLUOUS=${FIND_SUPERFLUOUS//--->/${EOL}--->}
+	TEMP=$(echo ${FIND_SUPERFLUOUS} | sed -n 's/^---> \([0-9a-f]*\)Step [0-9]*\/[0-9]* : FROM.*/docker image rm \1/p')
+ 	[ "$TEMP" != '' ] && execute $TEMP 'deleting superfluous images'
 
-	if [ "$KEEP" == "false" ]; then
-		rm ${PROJECT}/${DOCKERFILE}-${docker_arch}
-	fi
+	[ "$KEEP" == "false" ] && rm ${PROJECT}/${DOCKERFILE}-${docker_arch}
 
-	ARCH_IMAGES+=($IMAGE)
-	ARCH_IMAGES_LATEST+=($IMAGE_LATEST)
 done
 
 if [ "$MANIFEST" == "true" ]; then
-	MANIFEST=${REPOSITORY}/${PROJECT}
-	MANIFEST_LATEST=${MANIFEST}:latest
-        if [ "$VERSION" != '' ]; then
-                MANIFEST=${MANIFEST}:${VERSION}
-        fi
-
-	MANIFESTFILE=~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}
-        MANIFESTFILE_LATEST=${MANIFESTFILE}-latest
-	if [ "$VERSION" != '' ]; then
-                MANIFESTFILE=${MANIFESTFILE}-${VERSION}
-        fi
-	rm -R ${MANIFESTFILE}
-        if [ "$LATEST" == "true" ]; then
-		rm -R ${MANIFESTFILE_LATEST}
-	fi
-
-	docker manifest create ${MANIFEST} ${ARCH_IMAGES[@]}
-	docker manifest push ${MANIFEST}
-	docker pull ${MANIFEST}
+	for PROJECT in "${!ARCH_IMAGES[@]}"
+	do
+		LIST=${ARCH_IMAGES[$PROJECT]}
+		if [ "$VERSION" != '' ]; then
+	                [ -d "~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}-${VERSION}" ] && execute "rm -R ~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}-${VERSION}" 'delete old manifest-file'
+	                execute "docker manifest create ${REPOSITORY}/${PROJECT}:${VERSION} ${LIST}" 'create manifest'
+	       	        execute "docker manifest push ${REPOSITORY}/${PROJECT}:${VERSION}" 'push manifest to repository'
+        	       	execute "docker pull ${REPOSITORY}/${PROJECT}:${VERSION}" 'pull manifest to local repositroy'
+		else
+	                [ -d "~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}" ] && execute "rm -R ~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}" 'delete old manifest-file'
+        	        execute "docker manifest create ${REPOSITORY}/${PROJECT} ${LIST}" 'create manifest'
+                	execute "docker manifest push ${REPOSITORY}/${PROJECT}" 'push manifest to repository'
+                	execute "docker pull ${REPOSITORY}/${PROJECT}" 'pull manifest to local repositroy'
+		fi
+	done
 	if [ "$LATEST" == "true" ]; then
-		docker manifest create ${MANIFEST_LATEST} ${ARCH_IMAGES_LATEST[@]}
-		docker manifest push ${MANIFEST_LATEST}
-		docker pull ${MANIFEST_LATEST}
+        	for PROJECT in "${!ARCH_IMAGES_LATEST[@]}"
+        	do
+			LIST=${ARCH_IMAGES_LATEST[$PROJECT]}
+        	        [ -d "~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}-latest" ] && execute "rm -R ~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}-latest"
+                	execute "docker manifest create ${REPOSITORY}/${PROJECT}:latest ${LIST}" 'create manifest'
+	                execute "docker manifest push ${REPOSITORY}/${PROJECT}:latest" 'push manifest to repository'
+        	        execute "docker pull ${REPOSITORY}/${PROJECT}:latest" 'pull manifest to local repositroy'
+		done
 	fi
 fi
