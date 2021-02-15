@@ -1,0 +1,3 @@
+FROM    oliverf/fhem:23749
+
+COPY    --chown=fhem:fhem 32_WifiLight.pm FHEM/
