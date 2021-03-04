@@ -1,0 +1,27 @@
+FROM    oliverf/smarthome-base:latest
+
+ENV     DEBIAN_FRONTEND noninteractive
+ENV     TZ Europe/Berlin
+
+RUN     apt-get update && \
+        apt-get --quiet --yes --no-install-recommends install \
+		sudo \
+		owserver=3.2p3+dfsg1-2+deb10u1 && \
+	apt-get -q -y clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN	addgroup --gid 1000 owserver && \
+	adduser --system --disabled-password --ingroup owserver --uid 1000 owserver && \
+	echo 'owserver ALL=(ALL) NOPASSWD: /home/owserver/chown.sh' >> /etc/sudoers && \
+	chmod og-wrx /home/owserver && \
+	chown owserver:owserver /home/owserver
+
+WORKDIR /home/owserver
+
+COPY	chown.sh ./
+
+USER    owserver
+
+COPY    --chown=owserver:owserver owserver.conf start.sh ./
+
+CMD	[ "/bin/bash", "start.sh" ]
