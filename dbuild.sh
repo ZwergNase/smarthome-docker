@@ -154,10 +154,10 @@ do
 	done
 	if [ ${#IMAGES[@]} -eq 0 ]; then
 		HASH=$(echo ${TEMP} | sed -n 's/Successfully built \([0-9a-f]*\)/\1/p')
-		IMAGES[$HASH]=${PROJECT}
+		IMAGES["$HASH"]=${PROJECT}
 	fi
-        [ "$PUSH" == "true" ] && execute "docker login" 'log into repository'
 
+        [ "$PUSH" == "true" ] && execute "docker login" 'log into repository'
 
 	execute '' 'tag all images'
 	for HASH in "${!IMAGES[@]}"
