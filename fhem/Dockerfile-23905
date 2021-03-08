@@ -1,0 +1,112 @@
+FROM    oliverf/smarthome-builder:latest as builder
+
+LABEL   maintainer="Oliver Friesen <oliver.friesen@gmail.com>" 
+
+ENV     DEBIAN_FRONTEND noninteractive
+
+RUN     svn --non-interactive --trust-server-cert co https://svn.fhem.de/fhem/trunk/fhem@23905 /tmp/fhem
+
+FROM    oliverf/smarthome-base:latest
+
+ENV     DEBIAN_FRONTEND noninteractive
+ENV     TZ Europe/Berlin
+ENV	PERL_MM_USE_DEFAULT 1
+
+RUN     apt-get update && \
+        apt-get --quiet --yes --no-install-recommends install \
+		tzdata \
+		usbutils \
+		procps \
+		perl \
+		libtime-hires-perl \
+		libdevice-serialport-perl \
+		libio-socket-ssl-perl \
+		libjson-perl \
+                libpath-tiny-perl \
+                libdatetime-perl \
+		liblinux-inotify2-perl \
+                libdata-dump-perl \
+                libfile-find-rule-perl \
+		libcrypt-rijndael-perl \
+		libsoap-lite-perl \
+		libwww-perl \
+		libxml-simple-perl \
+		libxml-parser-lite-perl \
+		libwww-perl \
+		libtext-diff-perl \
+		libdbi-perl \
+		libdbd-mysql-perl \
+		build-essential \
+		cpanminus && \
+	perl -MCPAN -e 'install Net::WebSocket::Server' && \
+	apt-get --quiet --yes purge \
+		build-essential \
+		cpanminus && \
+	apt-get --quiet --yes autoremove && \
+	apt-get --quiet --yes clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+	rm -Rf /home/fhem/.cpan
+
+RUN	addgroup --gid 1000 fhem && \
+	adduser --disabled-login --shell /usr/sbin/nologin --gecos "" --ingroup fhem --uid 1000 fhem && \
+	usermod -a -G dialout fhem && \
+	chmod go-wrx /home/fhem
+
+WORKDIR /opt/fhem/
+
+COPY   --from=builder /tmp/fhem .
+RUN     chown -R fhem:fhem ../fhem
+
+USER	fhem
+
+COPY	--chown=fhem:fhem fhem.cfg /home/fhem/fhem.cfg
+
+RUN     mv fhem.cfg fhem.cfg.original && \
+	mv log /home/fhem/log && \
+	mv www/gplot /home/fhem/gplot && \
+	mkdir /home/fhem/restoreDir && \
+	touch /home/fhem/uniqueID && \
+	touch /home/fhem/configDB.conf && \
+	ln -s /home/fhem/gplot www/gplot && \
+	ln -s /home/fhem/restoreDir restoreDir && \
+	ln -s /home/fhem/uniqueID FHEM/FhemUtils/uniqueID && \
+	ln -s /home/fhem/fronthem www/fronthem && \
+	ln -s /home/fhem/configDB.conf configDB.conf
+
+RUN     printf "attr global logfile temp.log\nattr global modpath .\nattr global statefile temp.save\ndefine telnetPort telnet 7072 global" > temp.cfg && \
+        perl fhem.pl temp.cfg & \
+        sleep 10 && \
+        perl fhem.pl localhost:7072 "update force https://raw.githubusercontent.com/herrmannj/fronthem/master/controls_fronthem.txt" && \
+        perl fhem.pl localhost:7072 shutdown && \
+        rm temp*
+
+EXPOSE  8083 8084 8085 7072
+
+CMD     ["perl", "fhem.pl", "/home/fhem/fhem.cfg"]
+LABEL	image=fhem
+
+USER    root
+
+# nodejs
+RUN     apt-get update && \
+        apt-get --quiet --yes --no-install-recommends install \
+                curl \
+                apt-transport-https \
+                ca-certificates \
+                gnupg && \
+        curl -s http://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
+        echo 'deb https://deb.nodesource.com/node_15.x buster main' > /etc/apt/sources.list.d/nodesource.list && \
+        echo 'deb-src https://deb.nodesource.com/node_15.x buster main' >> /etc/apt/sources.list.d/nodesource.list && \
+        apt-get update && \
+        apt-get --quiet --yes --no-install-recommends install \
+                nodejs \
+                gyp \
+                openssh-client && \
+        apt-get -q -y clean && \
+        rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
+
+# Alexa
+RUN     npm install -g --unsafe-perm --production alexa-fhem
+
+USER    fhem
+LABEL	image=fhem-alexa

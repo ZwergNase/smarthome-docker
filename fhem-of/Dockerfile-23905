@@ -1,0 +1,20 @@
+FROM    oliverf/fhem:23905
+
+USER    root
+
+RUN     apt-get update && \
+        apt-get --quiet --yes --no-install-recommends install \
+                libmime-base64-urlsafe-perl && \
+        apt-get --quiet --yes clean && \
+        rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN     printf "attr global logfile temp.log\nattr global modpath .\nattr global statefile temp.save\ndefine telnetPort telnet 7072 global" > temp.cfg && \
+        perl fhem.pl temp.cfg & \
+        sleep 10 && \
+        perl fhem.pl localhost:7072 "update force https://raw.githubusercontent.com/ZwergNase/FHEM/master/controls_SoftliqCloud.txt" && \
+        perl fhem.pl localhost:7072 shutdown && \
+        rm temp*
+
+USER	fhem
+
+COPY    --chown=fhem:fhem 32_WifiLight.pm FHEM/
