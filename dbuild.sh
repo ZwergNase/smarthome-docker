@@ -14,12 +14,18 @@ fi
 
 function execute {
 	if [ $VERBOUSE = 'true' ] || [ $SUPERVERBOUSE = 'true' ]; then
-		[ "$2" != '' ] && echo "${2}:"
-		[ "$1" != '' ] && echo "* ${1}"
+		[ "$2" != '' ] && printf "${2}:\n"
+		[ "$1" != '' ] && printf " > ${1}\n"
 	fi
-	[ "$1" != '' ] && EXECUTE_STDOUT=$(eval $1 2>&1) 
-	if [ $SUPERVERBOUSE = 'true' ]; then
-		[ "$EXECUTE_STDOUT" != '' ] && echo $EXECUTE_STDOUT
+
+	if [ "$1" != '' ]; then
+		if [ $SUPERVERBOUSE = 'true' ]; then
+			exec 5>&1
+			EXECUTE_STDOUT=$(eval $1 2>&1 | tee /dev/fd/5)
+			exec &>$(tty)
+		else
+			 EXECUTE_STDOUT=$(eval $1 2>&1)
+		fi
 	fi
 }
 
@@ -132,6 +138,7 @@ declare -A ARCH_IMAGES
 declare -A ARCH_IMAGES_LATEST
 for docker_arch in ${ARCHITECTURES}
 do
+	execute '' ":::::::::::::::::::::::::::::\n ${docker_arch}\n::::::::::::::::::::::::::::"
 	# prepend architecture only to official images (containing no '/')
 	sed -E "s|^(FROM[${TAB} ]+)([^/]+)$|\1${docker_arch}/\2|g" ${PROJECT}/${DOCKERFILE} |
 	# append architecture to my own images
@@ -189,16 +196,17 @@ do
 done
 
 if [ "$MANIFEST" == "true" ]; then
+	execute '' ":::::::::::::::::::::::::::::\n manifests\n::::::::::::::::::::::::::::"
 	for PROJECT in "${!ARCH_IMAGES[@]}"
 	do
 		LIST=${ARCH_IMAGES[$PROJECT]}
 		if [ "$VERSION" != '' ]; then
-	                [ -d "~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}-${VERSION}" ] && execute "rm -R ~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}-${VERSION}" 'delete old manifest-file'
+	                execute "docker manifest rm ${REPOSITORY}/${PROJECT}:${VERSION}" 'delete old manifest'
 	                execute "docker manifest create ${REPOSITORY}/${PROJECT}:${VERSION} ${LIST}" 'create manifest'
 	       	        execute "docker manifest push ${REPOSITORY}/${PROJECT}:${VERSION}" 'push manifest to repository'
         	       	execute "docker pull ${REPOSITORY}/${PROJECT}:${VERSION}" 'pull manifest to local repositroy'
 		else
-	                [ -d "~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}" ] && execute "rm -R ~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}" 'delete old manifest-file'
+			execute "docker manifest rm ${REPOSITORY}/${PROJECT}" 'delete old manifest'
         	        execute "docker manifest create ${REPOSITORY}/${PROJECT} ${LIST}" 'create manifest'
                 	execute "docker manifest push ${REPOSITORY}/${PROJECT}" 'push manifest to repository'
                 	execute "docker pull ${REPOSITORY}/${PROJECT}" 'pull manifest to local repositroy'
@@ -208,7 +216,7 @@ if [ "$MANIFEST" == "true" ]; then
         	for PROJECT in "${!ARCH_IMAGES_LATEST[@]}"
         	do
 			LIST=${ARCH_IMAGES_LATEST[$PROJECT]}
-        	        [ -d "~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}-latest" ] && execute "rm -R ~/.docker/manifests/docker.io_${REPOSITORY}_${PROJECT}-latest"
+			execute "docker manifest rm ${REPOSITORY}/${PROJECT}:latest" 'delete old manifest'
                 	execute "docker manifest create ${REPOSITORY}/${PROJECT}:latest ${LIST}" 'create manifest'
 	                execute "docker manifest push ${REPOSITORY}/${PROJECT}:latest" 'push manifest to repository'
         	        execute "docker pull ${REPOSITORY}/${PROJECT}:latest" 'pull manifest to local repositroy'
