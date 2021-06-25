@@ -1,0 +1,66 @@
+FROM	oliverf/smarthome-builder:latest as builder
+
+LABEL	maintainer="Oliver Friesen <oliver.friesen@gmail.com>" 
+
+ENV	DEBIAN_FRONTEND noninteractive
+ENV	TZ Europe/Berlin
+
+USER	root
+RUN	apt-get update && \
+	apt-get --quiet --yes --no-install-recommends install \
+		curl \
+		apt-transport-https \
+		ca-certificates \
+		gnupg && \
+	curl -s http://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
+	echo 'deb https://deb.nodesource.com/node_16.x buster main' > /etc/apt/sources.list.d/nodesource.list && \
+	echo 'deb-src https://deb.nodesource.com/node_16.x buster main' >> /etc/apt/sources.list.d/nodesource.list && \
+	apt-get update && \
+	apt-get --quiet --yes install \
+		nodejs
+USER	someuser
+
+RUN	git clone https://github.com/Koenkk/zigbee2mqtt.git /tmp/zigbee2mqtt && \
+	cd /tmp/zigbee2mqtt && \
+	git checkout 1.19.1 && \
+	npm ci
+
+FROM	oliverf/smarthome-base:latest
+
+ENV	DEBIAN_FRONTEND noninteractive
+ENV	TZ Europe/Berlin
+
+USER	root
+
+COPY	--from=builder /etc/apt/ /etc/apt_/
+
+RUN	apt-get update && \
+	apt-get --quiet --yes --no-install-recommends install \
+		ca-certificates && \
+	rm -R /etc/apt/ && \
+	mv /etc/apt_ /etc/apt && \
+	apt-get update && \
+	apt-get --quiet --yes --no-install-recommends install \
+		nodejs && \
+	apt-get --quiet --yes autoremove && \
+	apt-get --quiet --yes clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY	--from=builder /tmp/zigbee2mqtt /opt/zigbee2mqtt
+
+RUN	addgroup --gid 1000 zigbee2mqtt && \
+	adduser --disabled-login --shell /usr/sbin/nologin --gecos "" --ingroup zigbee2mqtt --uid 1000 zigbee2mqtt && \
+	usermod -a -G dialout zigbee2mqtt && \
+	chmod go-wrx /home/zigbee2mqtt
+
+COPY	configuration.yaml /home/zigbee2mqtt
+
+RUN	chown -R zigbee2mqtt:zigbee2mqtt /home/zigbee2mqtt
+
+ENV	ZIGBEE2MQTT_DATA="/home/zigbee2mqtt"
+
+USER	zigbee2mqtt
+
+WORKDIR	/opt/zigbee2mqtt
+
+CMD	["npm", "start"]
