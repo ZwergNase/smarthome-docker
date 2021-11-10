@@ -1,0 +1,179 @@
+[
+   {
+      "type":1,
+      "title":"FHEM",
+      "name":"FHEM",
+      "description":"FHEM (TM) is a GPL'd perl server for house automation. It is used to automate some common tasks in the household like switching lamps \/ shutters \/ heating \/ etc. and to log events like temperature \/ humidity \/ power consumption.",
+      "logo":"https://fhem.de/www/images/default/fhemicon.png",
+      "image":"oliverf/fhem:latest",
+      "categories":[
+         "Smarthome"
+      ],
+      "platform":"linux",
+      "restart_policy":"always",
+      "ports":[
+         {
+            "Desktop":"8083:8083/tcp",
+            "Smartphone":"8084:8084/tcp",
+            "Tablet":"8085:8085/tcp"
+         }
+      ],
+      "volumes":[
+         {
+            "container":"/home/fhem",
+            "bind":"fhem_data"
+         }
+      ]
+   },
+   {
+      "type":1,
+      "title":"FHEM-ALEXA",
+      "name":"FHEM-ALEXA",
+      "description":"FHEM (TM) is a GPL'd perl server for house automation. It is used to automate some common tasks in the household like switching lamps \/ shutters \/ heating \/ etc. and to log events like temperature \/ humidity \/ power consumption.",
+      "logo":"https://fhem.de/www/images/default/fhemicon.png",
+      "image":"oliverf/fhem-alexa:latest",
+      "categories":[
+         "Smarthome"
+      ],
+      "platform":"linux",
+      "restart_policy":"always",
+      "ports":[
+         {
+            "Desktop":"8083:8083/tcp",
+            "Smartphone":"8084:8084/tcp",
+            "Tablet":"8085:8085/tcp"
+         }
+      ],
+      "volumes":[
+         {
+            "container":"/home/fhem",
+            "bind":"fhem_data"
+         }
+      ]
+   },
+   {
+      "type":1,
+      "title":"FHEM-OF",
+      "name":"FHEM-OF",
+      "description":"FHEM (TM) is a GPL'd perl server for house automation. It is used to automate some common tasks in the household like switching lamps \/ shutters \/ heating \/ etc. and to log events like temperature \/ humidity \/ power consumption.",
+      "logo":"https://fhem.de/www/images/default/fhemicon.png",
+      "image":"oliverf/fhem-of:latest",
+      "categories":[
+         "Smarthome"
+      ],
+      "platform":"linux",
+      "restart_policy":"always",
+      "ports":[
+         {
+            "Desktop":"8083:8083/tcp",
+            "Smartphone":"8084:8084/tcp",
+            "Tablet":"8085:8085/tcp",
+            "fronthem":"2121:2121/tcp",
+            "mqtt":"1883:1883/udp"
+         }
+      ],
+      "volumes":[
+         {
+            "container":"/home/fhem",
+            "bind":"fhem_data"
+         }
+      ]
+   },
+   {
+      "type":1,
+      "title":"knxd",
+      "name":"knxd",
+      "description":"knxd is an advanced router/gateway which runs on any Linux computer; it can talk to all known KNX interfaces.",
+      "logo":"https://www.knx.org/wGlobal/wGlobal/layout/images/knx-logo.png",
+      "image":"oliverf/knxd:latest",
+      "categories":[
+         "Smarthome"
+      ],
+      "platform":"linux",
+      "restart_policy":"always",
+      "network_mode": "host",
+      "ports": [{}],
+      "volumes":[
+         {
+            "container":"/home/knxd",
+            "bind":"knxd_data"
+         }
+      ]
+   },
+   {
+      "type":1,
+      "title":"mariadb",
+      "name":"mariadb",
+      "description":"MariaDB Platform is the complete enterprise open source database solution, with the versatility to handle transactional, analytical or hybrid transactional/analytical workloads as well as relational or document data, and the ability to scale from standalone databases and columnar data warehouses to fully distributed SQL databases executing millions of transactions per second and performing interactive, ad hoc analytics on billions of rows.",
+      "logo":"https://mariadb.com/wp-content/webp-express/webp-images/doc-root/wp-content/uploads/2019/11/mariadb-logo_black-transparent-300x75.png.webp",
+      "image":"oliverf/mariadb:latest",
+      "categories":[
+         "Smarthome"
+      ],
+      "platform":"linux",
+      "restart_policy":"always",
+      "ports":[
+         {
+            "sql":"3306:3306/tcp"
+         }
+      ],
+      "volumes":[
+         {
+            "container":"/home/mariadb",
+            "bind":"mariadb_data"
+         }
+      ]
+   },
+   {
+      "type":1,
+      "title":"samba",
+      "name":"samba",
+      "description":"Samba is the standard Windows interoperability suite of programs for Linux and Unix.",
+      "logo":"https://www.samba.org/samba/style/2010/samba_2010_logo_transparent_151x27.png",
+      "image":"oliverf/samba:latest",
+      "categories":[
+         "Smarthome"
+      ],
+      "platform":"linux",
+      "restart_policy":"always",
+      "network_mode": "host",
+      "ports": [{}],
+      "volumes":[
+         { "container": "/home/samba", "bind": "samba_data" },
+         { "container": "/home/fhem", "bind": "fhem_data" },
+         { "container": "/home/knxd", "bind": "knxd_data" },
+         { "container": "/home/mariadb", "bind": "mariadb_data" },
+         { "container": "/home/zigbee2mqtt", "bind": "zigbee2mqtt_data" },
+         { "container": "/home/owserver", "bind": "owserver_data" },
+         { "container": "/home/weewx", "bind": "weewx_data" },
+         { "container": "/home/portainer", "bind": "portainer_data" },
+         { "container": "/home/yacht", "bind": "yacht_data" },
+         { "container": "/home/icecoder", "bind": "icecoder_data" },
+         { "container": "/home/smartvisu", "bind": "smartvisu_data" }
+      ]
+   },
+   {
+      "type":1,
+      "title":"owserver",
+      "name":"owserver",
+      "description":"owserver is the backend component of the OWFS 1-wire bus control system. owserver arbitrates access to the bus from multiple client processes. The physical bus is usually connected to a serial or USB port, and other processes connect to owserver over network sockets (tcp port). Communication can be local or over a network. Secure tunneling can be implemented using standard techniques.",
+      "logo":"",
+      "image":"oliverf/owserver:latest",
+      "categories":[
+         "Smarthome"
+      ],
+      "platform":"linux",
+      "restart_policy":"always",
+      "ports":[
+         {
+            "owserver":"4304:4304/tcp"
+	}
+      ],
+      "volumes":[
+         {
+            "container":"/home/owserver",
+            "bind":"owserver_data"
+         }
+      ]
+   }
+]
